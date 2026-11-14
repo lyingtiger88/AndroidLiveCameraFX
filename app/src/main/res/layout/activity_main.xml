@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="LIVE CAMERA FX"
+        android:text="LIVE CAMERA FX  •  0.2.0"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
         android:textSize="22sp" />
@@ -32,7 +32,7 @@
         android:id="@+id/fpsText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="FPS: --"
+        android:text="FPS پردازش: --"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         android:paddingTop="14dp" />
@@ -40,7 +40,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="نسخه آزمایشی: فقط پیش‌نمایش و سنجش عملکرد"
+        android:text="نسخه آزمایشی • مسیر پردازش سبک‌تر با وضوح هدف 640×480"
         android:textColor="#9292A3"
         android:textSize="12sp"
         android:paddingTop="6dp" />
