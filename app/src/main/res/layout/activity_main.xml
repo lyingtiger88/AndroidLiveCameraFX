@@ -1,0 +1,47 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#101018"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="LIVE CAMERA FX"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="در انتظار دسترسی دوربین"
+        android:textColor="#B8B8C8"
+        android:paddingTop="6dp"
+        android:paddingBottom="12dp" />
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/fpsText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="FPS: --"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:paddingTop="14dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="نسخه آزمایشی: فقط پیش‌نمایش و سنجش عملکرد"
+        android:textColor="#9292A3"
+        android:textSize="12sp"
+        android:paddingTop="6dp" />
+</LinearLayout>
