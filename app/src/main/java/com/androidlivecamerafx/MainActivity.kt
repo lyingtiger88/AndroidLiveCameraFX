@@ -19,16 +19,22 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 class MainActivity : AppCompatActivity() {
     private lateinit var previewView: PreviewView
     private lateinit var statusText: TextView
     private lateinit var fpsText: TextView
+    private lateinit var timingText: TextView
 
     private val cameraExecutor = Executors.newSingleThreadExecutor()
     private val frameCount = AtomicInteger(0)
+    private val intervalTotalNs = AtomicLong(0L)
+    private val intervalCount = AtomicInteger(0)
+    private val processingTotalNs = AtomicLong(0L)
     private val fpsHandler = Handler(Looper.getMainLooper())
     private var fpsTask: Runnable? = null
+    private var lastFrameTimestampNs = 0L
 
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -43,8 +49,8 @@ class MainActivity : AppCompatActivity() {
         previewView = findViewById(R.id.previewView)
         statusText = findViewById(R.id.statusText)
         fpsText = findViewById(R.id.fpsText)
+        timingText = findViewById(R.id.timingText)
 
-        // Prefer the lower-cost rendering path on supported devices.
         previewView.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
         previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
 
@@ -83,8 +89,19 @@ class MainActivity : AppCompatActivity() {
                 .build()
 
             analysis.setAnalyzer(cameraExecutor) { image ->
-                frameCount.incrementAndGet()
-                image.close()
+                val startedNs = SystemClock.elapsedRealtimeNanos()
+                try {
+                    val timestampNs = image.imageInfo.timestamp
+                    if (lastFrameTimestampNs != 0L && timestampNs > lastFrameTimestampNs) {
+                        intervalTotalNs.addAndGet(timestampNs - lastFrameTimestampNs)
+                        intervalCount.incrementAndGet()
+                    }
+                    lastFrameTimestampNs = timestampNs
+                    frameCount.incrementAndGet()
+                } finally {
+                    image.close()
+                    processingTotalNs.addAndGet(SystemClock.elapsedRealtimeNanos() - startedNs)
+                }
             }
 
             try {
@@ -95,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                     preview,
                     analysis
                 )
-                statusText.text = "دوربین فعال است • حالت بهینه‌سازی"
+                statusText.text = "دوربین فعال است • وضوح هدف 640×480"
                 startFpsMonitor()
             } catch (error: Exception) {
                 statusText.text = "خطای راه‌اندازی: ${error.localizedMessage ?: "نامشخص"}"
@@ -107,13 +124,28 @@ class MainActivity : AppCompatActivity() {
         fpsTask?.let(fpsHandler::removeCallbacks)
         val task = object : Runnable {
             override fun run() {
-                val fps = frameCount.getAndSet(0)
-                fpsText.text = "FPS پردازش: $fps  •  وضوح هدف: 640×480"
+                val frames = frameCount.getAndSet(0)
+                val intervals = intervalCount.getAndSet(0)
+                val intervalTotal = intervalTotalNs.getAndSet(0L)
+                val processingTotal = processingTotalNs.getAndSet(0L)
+
+                val averageIntervalMs =
+                    if (intervals > 0) intervalTotal / intervals / 1_000_000.0 else 0.0
+                val averageProcessingMs =
+                    if (frames > 0) processingTotal / frames / 1_000_000.0 else 0.0
+
+                fpsText.text = "فریم دریافتی در ثانیه: $frames"
+                timingText.text = String.format(
+                    java.util.Locale.US,
+                    "فاصله متوسط فریم: %.1f ms  •  زمان Analyzer: %.2f ms",
+                    averageIntervalMs,
+                    averageProcessingMs
+                )
                 fpsHandler.postDelayed(this, 1000L)
             }
         }
         fpsTask = task
-        fpsHandler.post(task)
+        fpsHandler.postDelayed(task, 1000L)
     }
 
     override fun onDestroy() {
